@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bento Cyber Card - Perfil Interativo</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- QR Code Generator Lib -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        cyber: {
+                            bg: '#090d16',
+                            card: '#111827',
+                            border: '#1f2937',
+                            accent: '#6366f1',
+                            neon: '#06b6d4',
+                            pink: '#ec4899'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg-grid-color: rgba(255, 255, 255, 0.04);
+            --card-border-glow: linear-gradient(135deg, #6366f1, #06b6d4);
+        }
+
+        /* Matrix / Mesh Grid Background */
+        .grid-bg {
+            background-size: 30px 30px;
+            background-image: 
+                linear-gradient(to right, var(--bg-grid-color) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--bg-grid-color) 1px, transparent 1px);
+        }
+
+        /* Bento Cards Smooth Tilt */
+        .bento-card {
+            transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        /* Glow Border Hover Effect */
+        .glow-border {
+            position: relative;
+        }
+        .glow-border::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            transition: all 0.4s ease;
+        }
+
+        .glow-border:hover::before {
+            background: var(--card-border-glow);
+            opacity: 1;
+        }
+
+        /* Neumorphic Light Theme Specifics */
+        .theme-neumorphic {
+            --bg-grid-color: rgba(0, 0, 0, 0.05);
+            background-color: #e0e5ec !important;
+            color: #2d3748 !important;
+        }
+        .theme-neumorphic .bento-card {
+            background: #e0e5ec !important;
+            box-shadow: 9px 9px 16px rgb(163,177,198,0.6), -9px -9px 16px rgba(255,255,255, 0.8) !important;
+            border: none !important;
+        }
+        .theme-neumorphic .text-muted {
+            color: #4a5568 !important;
+        }
+
+        /* Cyberpunk Neon Theme Specifics */
+        .theme-cyberpunk {
+            --bg-grid-color: rgba(255, 230, 0, 0.08);
+            background-color: #0b0c10 !important;
+            --card-border-glow: linear-gradient(135deg, #fcee0a, #00f0ff);
+        }
+        .theme-cyberpunk .bento-card {
+            background: #1f2833 !important;
+            border-color: #45a29e !important;
+        }
+
+        /* Toast Popup Animation */
+        @keyframes toastIn {
+            from { transform: translateY(100%) scale(0.9); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .toast-active {
+            animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
+</head>
+<body class="bg-cyber-bg text-slate-100 min-h-screen grid-bg flex flex-col justify-between p-4 sm:p-6 lg:p-10 font-sans transition-colors duration-500" id="bodyRoot">
+
+    <!-- Top Navigation / Theme Controls -->
+    <header class="max-w-5xl mx-auto w-full flex justify-between items-center mb-8 z-20">
+        <!-- Live Status Pill -->
+        <div class="flex items-center gap-3 bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-slate-800 text-xs font-mono">
+            <span class="relative flex h-2.5 w-2.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <span class="text-slate-300">SYSTEM: ONLINE</span>
+            <span class="text-slate-600">|</span>
+            <span class="text-indigo-400 font-semibold" id="viewsCounter"><i class="fa-solid fa-eye mr-1"></i>1,482 views</span>
+        </div>
+
+        <!-- Theme & Audio Controls -->
+        <div class="flex items-center gap-2">
+            <!-- Audio Toggle -->
+            <button id="soundToggleBtn" onclick="toggleAudio()" class="w-10 h-10 rounded-full bg-slate-800/80 border border-slate-700 flex items-center justify-center text-slate-300 hover:text-white hover:border-indigo-500 transition-all" title="Efeitos de Áudio">
+                <i class="fa-solid fa-volume-high text-sm" id="soundIcon"></i>
+            </button>
+
+            <!-- Theme Switcher Menu -->
+            <div class="bg-slate-900/80 backdrop-blur-md p-1 rounded-full border border-slate-800 flex items-center">
+                <button onclick="switchTheme('cyber')" class="px-3 py-1.5 rounded-full text-xs font-semibold transition-all theme-btn active text-indigo-400 bg-slate-800" id="btnCyber">
+                    Cyber
+                </button>
+                <button onclick="switchTheme('neumorphic')" class="px-3 py-1.5 rounded-full text-xs font-semibold transition-all text-slate-400 hover:text-white" id="btnLight">
+                    Light
+                </button>
+                <button onclick="switchTheme('cyberpunk')" class="px-3 py-1.5 rounded-full text-xs font-semibold transition-all text-slate-400 hover:text-white" id="btnNeon">
+                    Neon
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN BENTO GRID CONTAINER -->
+    <main class="max-w-5xl mx-auto w-full grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 z-10 my-auto">
+        
+        <!-- CARD 1: PROFILE HERO CARD (Large 2x2 Spanning) -->
+        <div class="bento-card glow-border md:col-span-2 lg:col-span-2 md:row-span-2 bg-slate-900/90 rounded-3xl p-6 sm:p-8 flex flex-col justify-between border border-slate-800 relative overflow-hidden group">
+            
+            <!-- Ambient Card Backlight -->
+            <div class="absolute -top-24 -left-24 w-60 h-60 bg-indigo-600/20 rounded-full blur-3xl group-hover:bg-indigo-600/30 transition-all duration-500 pointer-events-none"></div>
+
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+                <!-- Avatar with Interactive Pulse Ring -->
+                <div class="relative shrink-0">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80" 
+                         alt="Foto de Perfil" 
+                         class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border-2 border-indigo-500/30 shadow-2xl group-hover:scale-105 transition-transform duration-300"
+                         onerror="this.onerror=null; this.src='https://placehold.co/120x120/1e293b/ffffff?text=Perfil';">
+                    <div class="absolute -bottom-2 -right-2 bg-indigo-600 text-white p-1.5 rounded-xl text-xs shadow-lg border border-slate-900" title="Verificado">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-mono font-medium mb-2">
+                        <span>PESQUISADORA & DEV</span>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                        Dra. Ana Silva
+                        <i class="fa-solid fa-circle-check text-indigo-400 text-lg"></i>
+                    </h1>
+                    <p class="text-slate-400 text-sm mt-1 font-medium leading-relaxed text-muted">
+                        Engenharia Offshore, IA Aplicada & Visualização de Dados.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Bio / Mission Statement -->
+            <div class="my-6 pt-4 border-t border-slate-800/80">
+                <p class="text-slate-300 text-sm leading-relaxed text-muted">
+                    Especialista em otimização de dados industriais e modelos preditivos para operações marítimas. Transformando complexidade em sistemas intuitivos.
+                </p>
+                <div class="flex flex-wrap gap-2 mt-4">
+                    <span class="text-xs px-3 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 font-mono">#OffshoreData</span>
+                    <span class="text-xs px-3 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 font-mono">#PythonAI</span>
+                    <span class="text-xs px-3 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 font-mono">#Analytics</span>
+                </div>
+            </div>
+
+            <!-- Quick Action Bar -->
+            <div class="flex items-center justify-between gap-3 pt-2">
+                <button onclick="openQrModal()" class="flex-1 py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-600/25 active:scale-95">
+                    <i class="fa-solid fa-qrcode text-base"></i>
+                    <span>QR Code</span>
+                </button>
+                <button onclick="copyProfileLink()" class="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-95">
+                    <i class="fa-regular fa-copy"></i>
+                    <span class="hidden sm:inline">Copiar Link</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- CARD 2: LINKEDIN (Wide Action Card) -->
+        <a href="https://linkedin.com" target="_blank" onclick="playSound('click')" class="bento-card glow-border md:col-span-1 lg:col-span-2 bg-gradient-to-r from-blue-900/40 to-slate-900 rounded-3xl p-6 border border-slate-800 flex items-center justify-between group cursor-pointer">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-blue-600/20 text-blue-400 flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                    <i class="fa-brands fa-linkedin-in"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg text-white group-hover:text-blue-400 transition-colors">LinkedIn Profile</h3>
+                    <p class="text-xs text-slate-400 font-mono text-muted">Rede Profissional & Artigos</p>
+                </div>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 group-hover:translate-x-1 group-hover:text-white transition-all">
+                <i class="fa-solid fa-arrow-up-right-from-square text-sm"></i>
+            </div>
+        </a>
+
+        <!-- CARD 3: LATTES CURRICULUM -->
+        <a href="http://lattes.cnpq.br/" target="_blank" onclick="playSound('click')" class="bento-card glow-border bg-slate-900/90 rounded-3xl p-6 border border-slate-800 flex flex-col justify-between group cursor-pointer min-h-[160px]">
+            <div class="flex justify-between items-start">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-xl group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">CNPq</span>
+            </div>
+            <div>
+                <h3 class="font-bold text-base text-white group-hover:text-indigo-400 transition-colors">Curriculo Lattes</h3>
+                <p class="text-xs text-slate-400 mt-1 text-muted">Publicações & Projetos</p>
+            </div>
+        </a>
+
+        <!-- CARD 4: INSTAGRAM -->
+        <a href="https://instagram.com" target="_blank" onclick="playSound('click')" class="bento-card glow-border bg-slate-900/90 rounded-3xl p-6 border border-slate-800 flex flex-col justify-between group cursor-pointer min-h-[160px]">
+            <div class="flex justify-between items-start">
+                <div class="w-12 h-12 rounded-2xl bg-pink-500/10 text-pink-400 flex items-center justify-center text-xl group-hover:bg-gradient-to-tr group-hover:from-amber-500 group-hover:via-rose-500 group-hover:to-purple-600 group-hover:text-white transition-all">
+                    <i class="fa-brands fa-instagram"></i>
+                </div>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">@ana.data</span>
+            </div>
+            <div>
+                <h3 class="font-bold text-base text-white group-hover:text-pink-400 transition-colors">Instagram</h3>
+                <p class="text-xs text-slate-400 mt-1 text-muted">Bastidores & Tech Posts</p>
+            </div>
+        </a>
+
+        <!-- CARD 5: FEATURED PORTFOLIO PROJECT (2 Columns Wide) -->
+        <div class="bento-card glow-border md:col-span-2 lg:col-span-2 bg-slate-900/90 rounded-3xl p-6 border border-slate-800 flex flex-col justify-between relative overflow-hidden group">
+            <div class="flex justify-between items-start mb-4">
+                <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-mono font-semibold">
+                        PROJETO DE DESTAQUE
+                    </span>
+                </div>
+                <span class="text-xs text-slate-500 font-mono">2026 RELEASE</span>
+            </div>
+
+            <div>
+                <h3 class="text-xl font-bold text-white group-hover:text-indigo-400 transition-colors">Plataforma Analytics Offshore</h3>
+                <p class="text-xs text-slate-400 mt-2 leading-relaxed text-muted">
+                    Dashboard preditivo em tempo real para monitoramento de custos e estimativa cambial BRL/USD em equipamentos operacionais.
+                </p>
+            </div>
+
+            <!-- Fake Interactive Preview Bar inside Bento Card -->
+            <div class="mt-4 p-3 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between text-xs font-mono">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-chart-line text-cyan-400"></i>
+                    <span class="text-slate-300">Model Precision: <span class="text-emerald-400 font-bold">98.4%</span></span>
+                </div>
+                <a href="#" onclick="showToast('Abrindo demonstração do projeto...'); return false;" class="text-indigo-400 hover:text-indigo-300 font-semibold underline underline-offset-4">Ver Demo</a>
+            </div>
+        </div>
+
+        <!-- CARD 6: EMAIL DIRECT CONTACT -->
+        <a href="mailto:ana.silva@exemplo.com" onclick="playSound('click')" class="bento-card glow-border md:col-span-1 lg:col-span-2 bg-gradient-to-r from-indigo-900/30 via-slate-900 to-slate-900 rounded-3xl p-6 border border-slate-800 flex items-center justify-between group cursor-pointer">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl group-hover:bg-emerald-500 group-hover:text-slate-950 transition-all">
+                    <i class="fa-regular fa-paper-plane"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-base text-white group-hover:text-emerald-400 transition-colors">Enviar E-mail</h3>
+                    <p class="text-xs text-slate-400 font-mono text-muted">ana.silva@exemplo.com</p>
+                </div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-slate-600 group-hover:text-white group-hover:translate-x-1 transition-all"></i>
+        </a>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="max-w-5xl mx-auto w-full text-center mt-8 pt-6 border-t border-slate-800/60 z-10">
+        <p class="text-xs text-slate-500 font-mono">
+            &copy; 2026 Dra. Ana Silva &bull; Cyber-Bento Digital Card v2.0
+        </p>
+    </footer>
+
+    <!-- QR CODE MODAL -->
+    <div id="qrModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center relative transform scale-95 transition-transform duration-300" id="qrModalCard">
+            <button onclick="closeQrModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <h3 class="text-xl font-bold text-white mb-1">Escanear Perfil</h3>
+            <p class="text-xs text-slate-400 mb-6 font-mono text-muted">Acesse este cartão direto no celular</p>
+
+            <!-- QR Container -->
+            <div class="bg-white p-4 rounded-2xl inline-block shadow-2xl mb-6 border-4 border-slate-800" id="qrcode"></div>
+
+            <button onclick="closeQrModal()" class="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold font-mono">
+                Fechar Janela
+            </button>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 bg-indigo-600 text-white px-5 py-3 rounded-2xl shadow-2xl text-xs font-mono font-semibold flex items-center gap-3 opacity-0 pointer-events-none transition-all">
+        <i class="fa-solid fa-circle-check text-base"></i>
+        <span id="toastMsg">Link copiado para a área de transferência!</span>
+    </div>
+
+    <!-- INTERACTION LOGIC & EFFECTS SCRIPT -->
+    <script>
+        // 1. Audio Effects Generator using Web Audio API (No External Audio Files)
+        let audioCtx = null;
+        let audioEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (!audioEnabled) return;
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.05);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.05);
+                } else if (type === 'pop') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.08);
+                    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.08);
+                }
+            } catch (e) {
+                console.log('Audio error:', e);
+            }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            const icon = document.getElementById('soundIcon');
+            const btn = document.getElementById('soundToggleBtn');
+            if (audioEnabled) {
+                icon.className = 'fa-solid fa-volume-high text-sm';
+                btn.classList.remove('opacity-50');
+                showToast('Efeitos de áudio ATIVADOS');
+                playSound('pop');
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark text-sm';
+                btn.classList.add('opacity-50');
+                showToast('Efeitos de áudio DESATIVADOS');
+            }
+        }
+
+        // 2. 3D Tilt Effect on Bento Cards
+        const cards = document.querySelectorAll('.bento-card');
+        cards.forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = (y - centerY) / 15;
+                const rotateY = (centerX - x) / 15;
+
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+            });
+        });
+
+        // 3. Theme Switching Logic
+        function switchTheme(theme) {
+            playSound('pop');
+            const body = document.getElementById('bodyRoot');
+            const btnCyber = document.getElementById('btnCyber');
+            const btnLight = document.getElementById('btnLight');
+            const btnNeon = document.getElementById('btnNeon');
+
+            // Reset theme classes
+            body.classList.remove('theme-neumorphic', 'theme-cyberpunk');
+            [btnCyber, btnLight, btnNeon].forEach(btn => {
+                btn.className = "px-3 py-1.5 rounded-full text-xs font-semibold transition-all text-slate-400 hover:text-white";
+            });
+
+            if (theme === 'neumorphic') {
+                body.classList.add('theme-neumorphic');
+                btnLight.className = "px-3 py-1.5 rounded-full text-xs font-semibold transition-all text-slate-900 bg-white shadow";
+            } else if (theme === 'cyberpunk') {
+                body.classList.add('theme-cyberpunk');
+                btnNeon.className = "px-3 py-1.5 rounded-full text-xs font-semibold transition-all text-yellow-300 bg-slate-900 border border-yellow-400";
+            } else {
+                btnCyber.className = "px-3 py-1.5 rounded-full text-xs font-semibold transition-all text-indigo-400 bg-slate-800";
+            }
+        }
+
+        // 4. QR Code Generator & Modal Logic
+        let qrcodeGenerated = false;
+        function openQrModal() {
+            playSound('pop');
+            const modal = document.getElementById('qrModal');
+            const modalCard = document.getElementById('qrModalCard');
+            
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modalCard.classList.remove('scale-95');
+            modalCard.classList.add('scale-100');
+
+            if (!qrcodeGenerated) {
+                new QRCode(document.getElementById("qrcode"), {
+                    text: window.location.href,
+                    width: 160,
+                    height: 160,
+                    colorDark : "#0f172a",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+                qrcodeGenerated = true;
+            }
+        }
+
+        function closeQrModal() {
+            playSound('click');
+            const modal = document.getElementById('qrModal');
+            const modalCard = document.getElementById('qrModalCard');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modalCard.classList.remove('scale-100');
+            modalCard.classList.add('scale-95');
+        }
+
+        // 5. Toast & Clipboard Logic
+        function copyProfileLink() {
+            playSound('pop');
+            const tempInput = document.createElement('input');
+            tempInput.value = window.location.href;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            showToast('Link do perfil copiado com sucesso!');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            toastMsg.innerText = message;
+            
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('toast-active');
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'pointer-events-none');
+                toast.classList.remove('toast-active');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
