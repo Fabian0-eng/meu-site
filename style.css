@@ -1,0 +1,140 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle at top, #1e293b 0%, #0f172a 100%);
+    padding: 20px;
+}
+
+/* Container Principal (Cartão com Glassmorphism) */
+.card-container {
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 28px;
+    padding: 48px 32px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+/* Cabeçalho do Perfil */
+.profile-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 28px;
+}
+
+/* Foto do Perfil - Aumentada e Focada no Rosto */
+.profile-img {
+    width: 140px;               /* Aumentado de 100px para 140px */
+    height: 140px;              /* Aumentado de 100px para 140px */
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: top center;/* Foca o corte no topo/rosto da foto */
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    margin-bottom: 16px;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.profile-img:hover {
+    transform: scale(1.05);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.profile-name {
+    color: #f8fafc;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.profile-subtitle {
+    color: #cbd5e1;
+    font-size: 0.95rem;
+    margin-top: 6px;
+    font-weight: 400;
+}
+
+/* Container dos Botões */
+.buttons-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Estilo Base dos Botões (Funciona para <button> ou <a>) */
+.btn {
+    width: 100%;
+    padding: 16px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    color: #ffffff;
+    text-decoration: none;      /* Remove o sublinhado caso use a tag <a> */
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.btn i {
+    font-size: 20px;
+}
+
+/* Efeitos Interativos */
+.btn:hover {
+    transform: translateY(-3px);
+}
+
+.btn:active {
+    transform: translateY(-1px);
+}
+
+/* Botão Lattes */
+.btn-lattes {
+    background: #0f4c81;
+}
+.btn-lattes:hover {
+    background: #135d9e;
+    box-shadow: 0 8px 24px rgba(15, 76, 129, 0.45);
+}
+
+/* Botão LinkedIn */
+.btn-linkedin {
+    background: #0a66c2;
+}
+.btn-linkedin:hover {
+    background: #0d74d7;
+    box-shadow: 0 8px 24px rgba(10, 102, 194, 0.45);
+}
+
+/* Botão Instagram */
+.btn-insta {
+    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+}
+.btn-insta:hover {
+    opacity: 0.95;
+    box-shadow: 0 8px 24px rgba(220, 39, 67, 0.45);
+}
